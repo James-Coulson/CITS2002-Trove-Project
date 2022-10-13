@@ -76,8 +76,6 @@ int save_trovefile(TROVEFILE *trovefile) {
 	// Check if null
 	CHECK_NULL(fp);
 
-	
-
 	// Iterate through trovefile entries
 	for (int i = 0; i < trovefile->num_entries; i++) {
 		// Getting pointer to trovefile entry
@@ -103,9 +101,57 @@ int save_trovefile(TROVEFILE *trovefile) {
 	return 0;
 }
 
+// -------------------- POPULATING TROVEFILE METHOD -------------------- //
+
+int populate_trovefile(TROVEFILE *trovefile, FILE *fp) {
+	// Define buffer
+	char buffer[MAX_BUF];
+
+	// Iterate through lines
+	while(fgets(buffer, MAX_BUF, fp) != NULL) {
+		// Get entry
+		TROVEFILE_ENTRY *entry = &trovefile->entries[trovefile->num_entries];
+
+		// Assign filepath to entry
+		buffer[strcspn(buffer, "\n")] = '\0';
+		entry->file_path = strdup(buffer);
+
+		// Get files
+		if (fgets(buffer, MAX_BUF, fp) == NULL) { return 1; }
+
+		// Defining strtok token
+		char *token = strtok(buffer, " ");
+
+		// Iterate through tokens
+		while (token != NULL) {
+			// Removing newline
+			token[strcspn(token, "\n")] = '\0';
+
+			// Saving word to trovefile entry
+			entry->words[entry->num_words] = malloc((strlen(token)) * sizeof(char));
+			strcpy(entry->words[entry->num_words++], token);
+
+			// Get next token
+			token = strtok(NULL, " ");
+		}
+
+		trovefile->num_entries++;
+
+		// // Print
+		// for (int i = 0; i < entry->num_words; i++) {
+		// 	printf("%s | ", entry->words[i]);
+		// }
+		// printf("\n");
+	}
+
+	return 0;
+}
+
 // -------------------- MODIFY TROVEFILE METHODS -------------------- //
 
 int modify_trovefile() {
+	// TODO: Add check for minimum length of word
+
 	// If a new trovefile needs to be built
 	if (bflag) {
 		// Defining new TROVEFILE
@@ -176,6 +222,60 @@ int modify_trovefile() {
 
 		// Save trovefile
 		return save_trovefile(trovefile);
+	}
+
+	// If an entry in a trovefile needs to be deleted
+	if (rflag) {
+		// Attempting to open trovefile
+		FILE *fp = fopen(fvalue, "r");
+
+		// Checking file was found
+		CHECK_NULL(fp);
+
+		// Defining TROVEFILE
+		TROVEFILE *trovefile = calloc(1, sizeof(TROVEFILE));
+
+		// Populating trovefile
+		populate_trovefile(trovefile, fp);
+
+		printf("%i\n", trovefile->num_entries);
+
+		// Closing file
+		fclose(fp);
+
+		// Iterate through files to be removed
+		for (int i = filelist_index; i < filelist_length; i++) {
+			// Getting file and converting to absolute path
+			char *file = realpath(filelist[i], NULL);
+
+			// Iterate through trovefile entries
+			for (int j = 0; j < trovefile->num_entries; j++) {
+				// Get entry
+				TROVEFILE_ENTRY *entry = &trovefile->entries[j];
+				// Check if files match
+
+				printf("\"%s\" : \"%s\"", file, entry->file_path);
+				if (strcmp(file, entry->file_path) == 0) {
+					// Remove entry
+					// TODO: The previous entry may need to be freed for space efficency
+					printf("asdasd\n");
+					if (j != trovefile->num_entries - 1) { trovefile->entries[j] = trovefile->entries[--trovefile->num_entries]; }
+					else { free(&trovefile->entries[j]); trovefile->num_entries--; }
+					break;
+				}
+			}
+		}
+
+
+		// // Print
+		for (int i = 0; i < trovefile->entries[0].num_words; i++) {
+			printf("%s | ", trovefile->entries[0].words[i]);
+		}
+		printf("\n");
+
+		// Saving trovefile
+		return save_trovefile(trovefile);
+
 	}
 
 	return 0;

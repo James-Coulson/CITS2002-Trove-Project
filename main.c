@@ -135,6 +135,7 @@ int populate_trovefile(TROVEFILE *trovefile, FILE *fp) {
 			token = strtok(NULL, " ");
 		}
 
+		// Incrementing entries
 		trovefile->num_entries++;
 
 		// // Print
@@ -254,24 +255,23 @@ int modify_trovefile() {
 				TROVEFILE_ENTRY *entry = &trovefile->entries[j];
 				// Check if files match
 
-				printf("\"%s\" : \"%s\"", file, entry->file_path);
+				// printf("\"%s\" : \"%s\"", file, entry->file_path);
 				if (strcmp(file, entry->file_path) == 0) {
 					// Remove entry
 					// TODO: The previous entry may need to be freed for space efficency
-					printf("asdasd\n");
 					if (j != trovefile->num_entries - 1) { trovefile->entries[j] = trovefile->entries[--trovefile->num_entries]; }
-					else { free(&trovefile->entries[j]); trovefile->num_entries--; }
+					else { trovefile->num_entries--; }
 					break;
 				}
 			}
 		}
 
 
-		// // Print
-		for (int i = 0; i < trovefile->entries[0].num_words; i++) {
-			printf("%s | ", trovefile->entries[0].words[i]);
-		}
-		printf("\n");
+		// // // Print
+		// for (int i = 0; i < trovefile->entries[0].num_words; i++) {
+		// 	printf("%s | ", trovefile->entries[0].words[i]);
+		// }
+		// printf("\n");
 
 		// Saving trovefile
 		return save_trovefile(trovefile);

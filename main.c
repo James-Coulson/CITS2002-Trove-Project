@@ -239,7 +239,7 @@ int modify_trovefile() {
 		// Populating trovefile
 		populate_trovefile(trovefile, fp);
 
-		printf("%i\n", trovefile->num_entries);
+		// printf("%i\n", trovefile->num_entries);
 
 		// Closing file
 		fclose(fp);
@@ -266,7 +266,6 @@ int modify_trovefile() {
 			}
 		}
 
-
 		// // // Print
 		// for (int i = 0; i < trovefile->entries[0].num_words; i++) {
 		// 	printf("%s | ", trovefile->entries[0].words[i]);
@@ -276,6 +275,26 @@ int modify_trovefile() {
 		// Saving trovefile
 		return save_trovefile(trovefile);
 
+	}
+	
+	if (uflag) {
+		// Attempting to open trovefile
+		FILE *fp = fopen(fvalue, "r");
+
+		// Checking file was opened
+		CHECK_NULL(fp);
+
+		// Defining trovefile
+		TROVEFILE *trovefile = calloc(1, sizeof(TROVEFILE));
+
+		// Populating trovefile
+		populate_trovefile(trovefile, fp);
+
+		// Closing file
+		fclose(fp);
+
+		// Iterate through files, removing filese that have been given to update.
+		// TODO: The rest of it
 	}
 
 	return 0;

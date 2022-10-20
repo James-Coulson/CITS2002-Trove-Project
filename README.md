@@ -5,6 +5,6 @@ This is an implementation of the 2022 Systems Programming Project 2 (CITS2002 @ 
 	$ make
 	$ make clean
 
-This will compile the program and produce a file called trove. The project specifications (which include how the progra is used and it's purpose) can also be found in this repo.
+This will compile the program and produce a file called trove. The project specifications (which include how the program is used and it's purpose) can also be found in this repo.
 
-Note: I didn't implement the compressed file reader that is outlined int he project specs.
+Note: I didn't implement the compressed file reader that is outlined in the project specs.

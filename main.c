@@ -49,7 +49,7 @@ typedef struct {
 
 // Defining flags
 bool bflag = false;
-bool fflag = true;
+bool fflag = false;
 bool lflag = false;
 bool rflag = false;
 bool uflag = false;
@@ -158,6 +158,9 @@ int modify_trovefile() {
 		// Defining new TROVEFILE
 		TROVEFILE *trovefile = calloc(1, sizeof(TROVEFILE));
 
+		// Check null
+		CHECK_NULL(trovefile);
+
 		// Assigning file name
 		trovefile->file = strdup(fvalue);
 
@@ -221,6 +224,9 @@ int modify_trovefile() {
 			// }
 		}
 
+		// Close file
+		fclose(fp);
+
 		// Save trovefile
 		return save_trovefile(trovefile);
 	}
@@ -253,16 +259,14 @@ int modify_trovefile() {
 			for (int j = 0; j < trovefile->num_entries; j++) {
 				// Get entry
 				TROVEFILE_ENTRY *entry = &trovefile->entries[j];
-				// Check if files match
 
-				// printf("\"%s\" : \"%s\"", file, entry->file_path);
-				if (strcmp(file, entry->file_path) == 0) {
-					// Remove entry
-					// TODO: The previous entry may need to be freed for space efficency
-					if (j != trovefile->num_entries - 1) { trovefile->entries[j] = trovefile->entries[--trovefile->num_entries]; }
-					else { trovefile->num_entries--; }
-					break;
-				}
+				// Check if files match
+				if (strcmp(file, entry->file_path) != 0) { continue; }
+
+				// Removing file and breaking
+				if (j != trovefile->num_entries - 1) { trovefile->entries[j] = trovefile->entries[--trovefile->num_entries]; }
+				else { trovefile->num_entries--; }
+				break;
 			}
 		}
 
@@ -294,7 +298,81 @@ int modify_trovefile() {
 		fclose(fp);
 
 		// Iterate through files, removing filese that have been given to update.
-		// TODO: The rest of it
+		for (int i = filelist_index; i < filelist_length; i++) {
+			// Get file
+			char *file = realpath(filelist[i], NULL);
+
+			// Iterate through entries in trovefile for matches
+			for (int j = 0; j < trovefile->num_entries; j++) {
+				// Get entry
+				TROVEFILE_ENTRY *entry = &trovefile->entries[j];
+
+				// Check if files match
+				if (strcmp(file, entry->file_path) != 0) { continue; }
+
+				// Remvoing entry if files match and breaking
+				if (j != trovefile->num_entries - 1) { trovefile->entries[j] = trovefile->entries[--trovefile->num_entries]; }
+				else { trovefile->num_entries--; }
+				break;
+			}
+		}
+
+		// --- Update new files --- //
+
+		// Defining file pointer
+		FILE *fp;
+
+		// Iterating through filelist
+		for (int i = filelist_index; i < filelist_length; i++) {
+			// Attempting to read file
+			fp = fopen(filelist[i], "r");
+
+			// Check fp is not NULL
+			CHECK_NULL(fp);
+
+			// Defining buffer
+			char buffer[MAX_BUF];
+
+			// Increment num_entries
+			trovefile->num_entries++;
+
+			// Getting trovefile entry
+			TROVEFILE_ENTRY *entry = &trovefile->entries[trovefile->num_entries - 1];
+
+			// Adding absolute path to entry
+			entry->file_path = realpath(filelist[i], NULL);
+
+			// Max words reached
+			bool max_words_reached = false;
+
+			// Read line by line
+			while((fgets(buffer, MAX_BUF, fp)) && !max_words_reached) {
+				// Defining strtok token
+				char *token = strtok(buffer, WORD_WHITESPACE);
+
+				// Iterate through tokens
+				while (token != NULL) {
+					// Removing newline
+					token[strcspn(token, "\n")] = '\0';
+
+					// Saving word to trovefile entry
+					entry->words[entry->num_words] = malloc((strlen(token)) * sizeof(char));
+					strcpy(entry->words[entry->num_words++], token);
+
+					// If max tokens exceeded break
+					if (entry->num_words >= MAX_ENTRIES) {
+						max_words_reached = true;
+						break;
+					}
+
+					// Get next token
+					token = strtok(NULL, WORD_WHITESPACE);
+				}
+			}
+		}
+
+		// Close file
+		fclose(fp);
 	}
 
 	return 0;
